@@ -107,7 +107,7 @@ class ProjectEstimationImportWizard(models.TransientModel):
         preview_lines.append(f'Data starts at: Row {data_start_row}')
         preview_lines.append('')
 
-        # NEW: Show actual header structure
+        # Show actual header structure
         preview_lines.append('📋 EXCEL HEADER STRUCTURE:')
         preview_lines.append('-' * 80)
         header_row = list(ws.iter_rows(min_row=header_row_idx, max_row=header_row_idx, values_only=True))[0]
@@ -218,34 +218,48 @@ class ProjectEstimationImportWizard(models.TransientModel):
         }
 
     def _find_product_line(self, product_code, product_name):
-        """Find product line using multiple strategies"""
-        if not product_code and not product_name:
+        """Find product line by product name only (simplified)"""
+        if not product_name:
+            _logger.warning('    → No product name provided')
             return False
 
-        # Strategy 1: Exact match by code
-        if product_code:
-            product_line = self.project_id.product_line_ids.filtered(
-                lambda l: l.product_id.default_code and l.product_id.default_code.strip() == product_code
-            )
-            if product_line:
-                return product_line[0] if len(product_line) > 1 else product_line
+        _logger.info('    → Searching by product name only:')
+        _logger.info('       Name from Excel: "%s"', product_name)
 
-        # Strategy 2: Exact match by name
-        if product_name:
-            product_line = self.project_id.product_line_ids.filtered(
-                lambda l: l.product_id.name and l.product_id.name.strip() == product_name
-            )
-            if product_line:
-                return product_line[0] if len(product_line) > 1 else product_line
+        # Show what's available in the project
+        _logger.info('    → Products in project:')
+        for pl in self.project_id.product_line_ids:
+            _logger.info('       - Name: "%s"', pl.product_id.name)
 
-        # Strategy 3: Case-insensitive match by name
-        if product_name:
-            product_line = self.project_id.product_line_ids.filtered(
-                lambda l: l.product_id.name and l.product_id.name.strip().lower() == product_name.lower()
-            )
-            if product_line:
-                return product_line[0] if len(product_line) > 1 else product_line
+        # Strategy 1: Exact match by name
+        product_line = self.project_id.product_line_ids.filtered(
+            lambda l: l.product_id.name and l.product_id.name.strip() == product_name.strip()
+        )
+        if product_line:
+            _logger.info('    → ✅ MATCHED by exact name: %s', product_line[0].product_id.name)
+            return product_line[0] if len(product_line) > 1 else product_line
 
+        # Strategy 2: Case-insensitive match by name
+        product_line = self.project_id.product_line_ids.filtered(
+            lambda l: l.product_id.name and l.product_id.name.strip().lower() == product_name.strip().lower()
+        )
+        if product_line:
+            _logger.info('    → ✅ MATCHED by case-insensitive name: %s', product_line[0].product_id.name)
+            return product_line[0] if len(product_line) > 1 else product_line
+
+        # Strategy 3: Partial match (name contains Excel name OR Excel name contains product name)
+        product_name_lower = product_name.strip().lower()
+        product_line = self.project_id.product_line_ids.filtered(
+            lambda l: l.product_id.name and (
+                product_name_lower in l.product_id.name.strip().lower() or
+                l.product_id.name.strip().lower() in product_name_lower
+            )
+        )
+        if product_line:
+            _logger.info('    → ✅ MATCHED by partial name: %s', product_line[0].product_id.name)
+            return product_line[0] if len(product_line) > 1 else product_line
+
+        _logger.warning('    → ❌ NO MATCH FOUND for name: "%s"', product_name)
         return False
 
     def _execute_import(self, ws, data_start_row):
@@ -292,8 +306,6 @@ class ProjectEstimationImportWizard(models.TransientModel):
             # Column Q (index 16) = Sale Price (Editable)
             cost_price = None
             sale_price = None
-            cost_col_idx = 15  # Column P
-            sale_col_idx = 16  # Column Q
 
             # Read Cost Price from column P (index 15)
             if len(row) > 15 and row[15] is not None:
@@ -399,6 +411,12 @@ class ProjectEstimationImportWizard(models.TransientModel):
                 summary += f'• {error}\n'
             if len(errors) > 5:
                 summary += _('... and %s more errors\n') % (len(errors) - 5)
+            
+            summary += _('\n\n💡 TO FIX "Product not found" ERRORS:\n')
+            summary += _('1. Check that products exist in the project\n')
+            summary += _('2. Verify product codes match exactly\n')
+            summary += _('3. Or verify product names match exactly\n')
+            summary += _('4. Use "Test Mode" in wizard to preview matches\n')
 
         # If nothing was updated, show helpful debug info
         if updated_count == 0:
@@ -411,6 +429,7 @@ class ProjectEstimationImportWizard(models.TransientModel):
             summary += _('  2. Cost Price is in column P\n')
             summary += _('  3. Sale Price is in column Q\n')
             summary += _('  4. Product codes/names match exactly\n')
+            summary += _('  5. Use "Test Mode" to preview before importing\n')
             summary += _('\nCheck server logs for detailed information.\n')
 
         # Post message to project
