@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- ========================================== -->
+        <!-- Screen Definitions -->
+        <!-- ========================================== -->
+
+        <!-- Project Definition Screen -->
+        <record id="screen_project_definition" model="screen.definition">
+            <field name="name">Project Definition</field>
+            <field name="code">project_definition</field>
+            <field name="model_name">project.definition</field>
+            <field name="sequence">10</field>
+            <field name="description">Manage project definitions with products, costs, and timelines</field>
+        </record>
+
+        <!-- Project Definition Functions -->
+        <record id="func_project_def_create" model="screen.function.definition">
+            <field name="name">Create Project</field>
+            <field name="code">create</field>
+            <field name="screen_id" ref="screen_project_definition"/>
+            <field name="function_type">create</field>
+            <field name="sequence">10</field>
+        </record>
+
+        <record id="func_project_def_read" model="screen.function.definition">
+            <field name="name">View Projects</field>
+            <field name="code">read</field>
+            <field name="screen_id" ref="screen_project_definition"/>
+            <field name="function_type">read</field>
+            <field name="sequence">20</field>
+        </record>
+
+        <record id="func_project_def_write" model="screen.function.definition">
+            <field name="name">Edit Project</field>
+            <field name="code">write</field>
+            <field name="screen_id" ref="screen_project_definition"/>
+            <field name="function_type">write</field>
+            <field name="sequence">30</field>
+        </record>
+
+        <record id="func_project_def_delete" model="screen.function.definition">
+            <field name="name">Delete Project</field>
+            <field name="code">unlink</field>
+            <field name="screen_id" ref="screen_project_definition"/>
+            <field name="function_type">unlink</field>
+            <field name="sequence">40</field>
+        </record>
+
+        <record id="func_project_def_confirm" model="screen.function.definition">
+            <field name="name">Confirm Project</field>
+            <field name="code">action_confirm</field>
+            <field name="screen_id" ref="screen_project_definition"/>
+            <field name="function_type">action</field>
+            <field name="sequence">50</field>
+        </record>
+
+        <!-- Product Pricing Screen -->
+        <record id="screen_product_pricing" model="screen.definition">
+            <field name="name">Product Pricing</field>
+            <field name="code">product_pricing</field>
+            <field name="model_name">project.product.pricing</field>
+            <field name="sequence">20</field>
+            <field name="description">Manage product pricing with component details and BOMs</field>
+        </record>
+
+        <!-- Product Pricing Functions -->
+        <record id="func_pricing_create" model="screen.function.definition">
+            <field name="name">Create Pricing</field>
+            <field name="code">create</field>
+            <field name="screen_id" ref="screen_product_pricing"/>
+            <field name="function_type">create</field>
+            <field name="sequence">10</field>
+        </record>
+
+        <record id="func_pricing_read" model="screen.function.definition">
+            <field name="name">View Pricing</field>
+            <field name="code">read</field>
+            <field name="screen_id" ref="screen_product_pricing"/>
+            <field name="function_type">read</field>
+            <field name="sequence">20</field>
+        </record>
+
+        <record id="func_pricing_write" model="screen.function.definition">
+            <field name="name">Edit Pricing</field>
+            <field name="code">write</field>
+            <field name="screen_id" ref="screen_product_pricing"/>
+            <field name="function_type">write</field>
+            <field name="sequence">30</field>
+        </record>
+
+        <record id="func_pricing_import_components" model="screen.function.definition">
+            <field name="name">Import Components</field>
+            <field name="code">action_import_components</field>
+            <field name="screen_id" ref="screen_product_pricing"/>
+            <field name="function_type">import</field>
+            <field name="sequence">40</field>
+        </record>
+
+        <record id="func_pricing_import_bom_materials" model="screen.function.definition">
+            <field name="name">Import BOM Materials</field>
+            <field name="code">action_import_bom_materials</field>
+            <field name="screen_id" ref="screen_product_pricing"/>
+            <field name="function_type">import</field>
+            <field name="sequence">50</field>
+        </record>
+
+        <record id="func_pricing_import_bom_operations" model="screen.function.definition">
+            <field name="name">Import BOM Operations</field>
+            <field name="code">action_import_bom_operations</field>
+            <field name="screen_id" ref="screen_product_pricing"/>
+            <field name="function_type">import</field>
+            <field name="sequence">60</field>
+        </record>
+
+        <record id="func_pricing_export_excel" model="screen.function.definition">
+            <field name="name">Export Components Excel</field>
+            <field name="code">action_export_components_excel</field>
+            <field name="screen_id" ref="screen_product_pricing"/>
+            <field name="function_type">export</field>
+            <field name="sequence">70</field>
+        </record>
+
+        <record id="func_pricing_confirm" model="screen.function.definition">
+            <field name="name">Confirm Pricing</field>
+            <field name="code">action_confirm</field>
+            <field name="screen_id" ref="screen_product_pricing"/>
+            <field name="function_type">action</field>
+            <field name="sequence">80</field>
+        </record>
+
+        <record id="func_pricing_approve" model="screen.function.definition">
+            <field name="name">Approve Pricing</field>
+            <field name="code">action_approve</field>
+            <field name="screen_id" ref="screen_product_pricing"/>
+            <field name="function_type">action</field>
+            <field name="sequence">90</field>
+        </record>
+
+        <!-- Material Planning Screen -->
+        <record id="screen_material_planning" model="screen.definition">
+            <field name="name">Material &amp; Production Planning</field>
+            <field name="code">material_planning</field>
+            <field name="model_name">material.production.planning</field>
+            <field name="sequence">30</field>
+            <field name="description">Plan materials and create production work orders</field>
+        </record>
+
+        <!-- Material Planning Functions -->
+        <record id="func_planning_create" model="screen.function.definition">
+            <field name="name">Create Planning</field>
+            <field name="code">create</field>
+            <field name="screen_id" ref="screen_material_planning"/>
+            <field name="function_type">create</field>
+            <field name="sequence">10</field>
+        </record>
+
+        <record id="func_planning_read" model="screen.function.definition">
+            <field name="name">View Planning</field>
+            <field name="code">read</field>
+            <field name="screen_id" ref="screen_material_planning"/>
+            <field name="function_type">read</field>
+            <field name="sequence">20</field>
+        </record>
+
+        <record id="func_planning_load_components" model="screen.function.definition">
+            <field name="name">Load Components</field>
+            <field name="code">action_load_components</field>
+            <field name="screen_id" ref="screen_material_planning"/>
+            <field name="function_type">action</field>
+            <field name="sequence">30</field>
+        </record>
+
+        <record id="func_planning_material_planning" model="screen.function.definition">
+            <field name="name">Material Planning</field>
+            <field name="code">action_material_planning</field>
+            <field name="screen_id" ref="screen_material_planning"/>
+            <field name="function_type">action</field>
+            <field name="sequence">40</field>
+        </record>
+
+        <record id="func_planning_create_work_orders" model="screen.function.definition">
+            <field name="name">Create Work Orders</field>
+            <field name="code">action_create_work_orders</field>
+            <field name="screen_id" ref="screen_material_planning"/>
+            <field name="function_type">action</field>
+            <field name="sequence">50</field>
+        </record>
+
+        <!-- Work Order Execution Screen -->
+        <record id="screen_work_order_execution" model="screen.definition">
+            <field name="name">Work Order Execution</field>
+            <field name="code">work_order_execution</field>
+            <field name="model_name">work.order.execution</field>
+            <field name="sequence">40</field>
+            <field name="description">Execute and track work orders</field>
+        </record>
+
+        <!-- Work Order Execution Functions -->
+        <record id="func_execution_create" model="screen.function.definition">
+            <field name="name">Create Execution</field>
+            <field name="code">create</field>
+            <field name="screen_id" ref="screen_work_order_execution"/>
+            <field name="function_type">create</field>
+            <field name="sequence">10</field>
+        </record>
+
+        <record id="func_execution_read" model="screen.function.definition">
+            <field name="name">View Execution</field>
+            <field name="code">read</field>
+            <field name="screen_id" ref="screen_work_order_execution"/>
+            <field name="function_type">read</field>
+            <field name="sequence">20</field>
+        </record>
+
+        <record id="func_execution_load_work_orders" model="screen.function.definition">
+            <field name="name">Load Work Orders</field>
+            <field name="code">action_load_work_orders</field>
+            <field name="screen_id" ref="screen_work_order_execution"/>
+            <field name="function_type">action</field>
+            <field name="sequence">30</field>
+        </record>
+
+        <record id="func_execution_start_selected" model="screen.function.definition">
+            <field name="name">Start Selected Work Orders</field>
+            <field name="code">action_start_selected</field>
+            <field name="screen_id" ref="screen_work_order_execution"/>
+            <field name="function_type">action</field>
+            <field name="sequence">40</field>
+        </record>
+
+        <record id="func_execution_issue_materials" model="screen.function.definition">
+            <field name="name">Issue Materials</field>
+            <field name="code">action_issue_materials_for_selected</field>
+            <field name="screen_id" ref="screen_work_order_execution"/>
+            <field name="function_type">action</field>
+            <field name="sequence">50</field>
+        </record>
+
+        <record id="func_execution_process_all" model="screen.function.definition">
+            <field name="name">Process All Selected</field>
+            <field name="code">action_open_process_wizard</field>
+            <field name="screen_id" ref="screen_work_order_execution"/>
+            <field name="function_type">action</field>
+            <field name="sequence">60</field>
+        </record>
+
+        <record id="func_execution_export_operations" model="screen.function.definition">
+            <field name="name">Export Operations Excel</field>
+            <field name="code">action_export_operations_excel</field>
+            <field name="screen_id" ref="screen_work_order_execution"/>
+            <field name="function_type">export</field>
+            <field name="sequence">70</field>
+        </record>
+
+        <record id="func_execution_export_materials" model="screen.function.definition">
+            <field name="name">Export Material Planning Excel</field>
+            <field name="code">action_export_material_planning_excel</field>
+            <field name="screen_id" ref="screen_work_order_execution"/>
+            <field name="function_type">export</field>
+            <field name="sequence">80</field>
+        </record>
+
+    </data>
+</odoo>

@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Cost Estimation Tree View -->
+    <record id="view_project_cost_estimation_tree" model="ir.ui.view">
+        <field name="name">project.cost.estimation.tree</field>
+        <field name="model">project.cost.estimation</field>
+        <field name="arch" type="xml">
+            <tree string="Cost Estimations"
+                  decoration-success="state=='completed'"
+                  decoration-info="state=='in_progress'"
+                  decoration-muted="state=='cancelled'">
+                <field name="name"/>
+                <field name="project_id"/>
+                <field name="estimation_date"/>
+                <field name="last_update_date"/>
+                <field name="state" widget="badge"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Cost Estimation Form View -->
+    <record id="view_project_cost_estimation_form" model="ir.ui.view">
+        <field name="name">project.cost.estimation.form</field>
+        <field name="model">project.cost.estimation</field>
+        <field name="arch" type="xml">
+            <form string="Cost Estimation">
+                <header>
+                    <button name="action_generate_estimation_excel" string="📊 Generate Excel"
+                            type="object" class="oe_highlight"
+                            invisible="state != 'draft'"/>
+
+                    <button name="action_download_estimation" string="⬇️ Download Excel"
+                            type="object" class="btn-primary"
+                            invisible="state not in ('in_progress', 'completed')"/>
+
+                    <button name="action_import_updated_prices" string="⬆️ Import Updated Prices"
+                            type="object" class="btn-success"
+                            invisible="state not in ('in_progress', 'completed')"/>
+
+                    <button name="action_complete" string="Mark as Completed"
+                            type="object" invisible="state != 'in_progress'"/>
+
+                    <button name="action_cancel" string="Cancel"
+                            type="object" invisible="state in ('completed', 'cancelled')"/>
+
+                    <button name="action_reset_to_draft" string="Reset to Draft"
+                            type="object" invisible="state not in ('cancelled', 'completed')"/>
+
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,in_progress,completed"/>
+                </header>
+
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group>
+                            <field name="project_id" readonly="1"/>
+                            <field name="estimation_date"/>
+                        </group>
+                        <group>
+                            <field name="last_update_date" readonly="1"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+
+                    <group string="📁 Excel File" invisible="not excel_file">
+                        <field name="excel_file" filename="excel_filename"/>
+                        <field name="excel_filename" invisible="1"/>
+                    </group>
+
+                    <div class="alert alert-info" role="alert" invisible="state != 'draft'">
+                        <strong>📊 How to Use Cost Estimation:</strong>
+                        <ol>
+                            <li>Click "Generate Excel" to create the estimation file</li>
+                            <li>Download the Excel file</li>
+                            <li>Edit the Cost Price and Sale Price columns</li>
+                            <li>Save the file</li>
+                            <li>Upload it back using "Import Updated Prices"</li>
+                        </ol>
+                    </div>
+
+                    <div class="alert alert-success" role="alert" invisible="state != 'in_progress'">
+                        <strong>✅ Excel File Generated!</strong>
+                        <p>Download the file, edit the prices, and upload it back when done.</p>
+                    </div>
+
+                    <div class="alert alert-warning" role="alert" invisible="state != 'completed'">
+                        <strong>✓ Estimation Completed</strong>
+                        <p>Prices have been updated in the project. You can still download or re-import if needed.</p>
+                    </div>
+
+                    <notebook>
+                        <page string="Notes">
+                            <field name="notes" placeholder="Add any notes about this estimation..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- Cost Estimation Search View -->
+    <record id="view_project_cost_estimation_search" model="ir.ui.view">
+        <field name="name">project.cost.estimation.search</field>
+        <field name="model">project.cost.estimation</field>
+        <field name="arch" type="xml">
+            <search string="Search Cost Estimations">
+                <field name="name"/>
+                <field name="project_id"/>
+                <filter string="Draft" name="draft" domain="[('state','=','draft')]"/>
+                <filter string="In Progress" name="in_progress" domain="[('state','=','in_progress')]"/>
+                <filter string="Completed" name="completed" domain="[('state','=','completed')]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Project" name="group_project" context="{'group_by':'project_id'}"/>
+                    <filter string="Status" name="group_state" context="{'group_by':'state'}"/>
+                    <filter string="Estimation Date" name="group_date" context="{'group_by':'estimation_date'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Import Wizard Form -->
+    <record id="view_project_estimation_import_wizard_form" model="ir.ui.view">
+        <field name="name">project.estimation.import.wizard.form</field>
+        <field name="model">project.estimation.import.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Import Updated Prices">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>⬆️ Import Updated Cost Estimation</h1>
+                    </div>
+
+                    <group>
+                        <group>
+                            <field name="estimation_id" readonly="1"/>
+                            <field name="project_id" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="excel_file" filename="filename"/>
+                            <field name="filename" invisible="1"/>
+                        </group>
+                    </group>
+
+                    <div class="alert alert-info" role="alert">
+                        <strong>📋 Import Instructions:</strong>
+                        <ul>
+                            <li>Upload the Excel file you edited</li>
+                            <li>System will read Cost Price and Sale Price columns</li>
+                            <li>Product prices in the project will be updated</li>
+                            <li>Make sure you didn't modify product names or codes</li>
+                        </ul>
+                    </div>
+                </sheet>
+
+                <footer>
+                    <button string="Import Prices" name="action_import_prices"
+                            type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Cost Estimation Action -->
+    <record id="action_project_cost_estimation" model="ir.actions.act_window">
+        <field name="name">Cost Estimations</field>
+        <field name="res_model">project.cost.estimation</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create Cost Estimation
+            </p>
+            <p>
+                Generate Excel files to estimate costs and sales prices for project products.
+            </p>
+        </field>
+    </record>
+
+    <!-- Add to Configuration Menu -->
+    <menuitem id="menu_project_cost_estimation"
+              name="Cost Estimations"
+              parent="menu_project_product_costing_root"
+              action="action_project_cost_estimation"
+              sequence="15"/>
+
+</odoo>

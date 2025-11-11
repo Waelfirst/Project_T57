@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ========================================== -->
+    <!-- ACTIONS FIRST (must be defined before views that reference them) -->
+    <!-- ========================================== -->
+
+    <!-- User Screen Permission Action -->
+    <record id="action_user_screen_permission" model="ir.actions.act_window">
+        <field name="name">User Screen Permissions</field>
+        <field name="res_model">user.screen.permission</field>
+        <field name="view_mode">tree,form</field>
+        <field name="context">{'search_default_has_access': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Manage User Screen Permissions
+            </p>
+            <p>
+                Assign users to screens and define their access levels.<br/>
+                You can set full access, read-only, or custom function-level permissions.
+            </p>
+        </field>
+    </record>
+
+    <!-- Screen Definition Action -->
+    <record id="action_screen_definition" model="ir.actions.act_window">
+        <field name="name">Screen Definitions</field>
+        <field name="res_model">screen.definition</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Define Screens in the System
+            </p>
+            <p>
+                Create screen definitions to manage user permissions.<br/>
+                Each screen can have multiple functions with different access levels.
+            </p>
+        </field>
+    </record>
+
+    <!-- User Permission Wizard Action -->
+    <record id="action_user_permission_wizard" model="ir.actions.act_window">
+        <field name="name">Assign User Permissions</field>
+        <field name="res_model">user.permission.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- ========================================== -->
+    <!-- Screen Definition Views -->
+    <!-- ========================================== -->
+
+    <!-- Screen Definition Tree -->
+    <record id="view_screen_definition_tree" model="ir.ui.view">
+        <field name="name">screen.definition.tree</field>
+        <field name="model">screen.definition</field>
+        <field name="arch" type="xml">
+            <tree string="Screen Definitions">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="model_name"/>
+                <field name="active"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Screen Definition Form -->
+    <record id="view_screen_definition_form" model="ir.ui.view">
+        <field name="name">screen.definition.form</field>
+        <field name="model">screen.definition</field>
+        <field name="arch" type="xml">
+            <form string="Screen Definition">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="%(action_user_screen_permission)d"
+                                type="action"
+                                class="oe_stat_button"
+                                icon="fa-users"
+                                context="{'search_default_screen_id': id}">
+                            <field name="user_permission_ids" widget="statbutton" string="User Permissions"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Screen Name (e.g., Project Definition)"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="code"/>
+                            <field name="model_name"/>
+                        </group>
+                        <group>
+                            <field name="sequence"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="description" placeholder="Description..."/>
+                    </group>
+                    <notebook>
+                        <page string="Available Functions" name="functions">
+                            <field name="function_ids">
+                                <tree editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="name"/>
+                                    <field name="code"/>
+                                    <field name="function_type"/>
+                                    <field name="active"/>
+                                    <field name="description"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ========================================== -->
+    <!-- User Screen Permission Views -->
+    <!-- ========================================== -->
+
+    <!-- User Screen Permission Tree -->
+    <record id="view_user_screen_permission_tree" model="ir.ui.view">
+        <field name="name">user.screen.permission.tree</field>
+        <field name="model">user.screen.permission</field>
+        <field name="arch" type="xml">
+            <tree string="User Screen Permissions"
+                  decoration-success="access_level=='full'"
+                  decoration-info="access_level=='read_only'"
+                  decoration-warning="access_level=='custom'"
+                  decoration-muted="access_level=='no_access'">
+                <field name="user_id"/>
+                <field name="screen_id"/>
+                <field name="access_level" widget="badge"/>
+                <field name="can_create" widget="boolean_toggle"/>
+                <field name="can_read" widget="boolean_toggle"/>
+                <field name="can_write" widget="boolean_toggle"/>
+                <field name="can_delete" widget="boolean_toggle"/>
+                <field name="can_import" widget="boolean_toggle"/>
+                <field name="can_export" widget="boolean_toggle"/>
+                <field name="has_access" widget="boolean_toggle"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- User Screen Permission Form -->
+    <record id="view_user_screen_permission_form" model="ir.ui.view">
+        <field name="name">user.screen.permission.form</field>
+        <field name="model">user.screen.permission</field>
+        <field name="arch" type="xml">
+            <form string="User Screen Permission">
+                <header>
+                    <field name="access_level" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="user_id" placeholder="Select User..." options="{'no_create': True}"/>
+                        </h1>
+                        <h2>
+                            <field name="screen_id" placeholder="Select Screen..."
+                                   options="{'no_create': True, 'no_create_edit': True}"/>
+                        </h2>
+                    </div>
+
+                    <group>
+                        <group string="Access Settings">
+                            <field name="has_access" widget="boolean_toggle"/>
+                            <field name="access_level" widget="radio"
+                                   invisible="not has_access"/>
+                        </group>
+                        <group string="Quick Access Summary">
+                            <field name="can_create" readonly="1"/>
+                            <field name="can_read" readonly="1"/>
+                            <field name="can_write" readonly="1"/>
+                            <field name="can_delete" readonly="1"/>
+                            <field name="can_import" readonly="1"/>
+                            <field name="can_export" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <div class="alert alert-info" role="alert" invisible="access_level != 'custom'">
+                        <strong>📋 Custom Access Mode</strong>
+                        <p>Define specific permissions for each function below.</p>
+                    </div>
+
+                    <div class="alert alert-success" role="alert" invisible="access_level != 'full'">
+                        <strong>✅ Full Access Mode</strong>
+                        <p>User has complete access to all functions in this screen.</p>
+                    </div>
+
+                    <div class="alert alert-warning" role="alert" invisible="access_level != 'read_only'">
+                        <strong>👁️ Read Only Mode</strong>
+                        <p>User can only view data, no modifications allowed.</p>
+                    </div>
+
+                    <notebook>
+                        <page string="Function Permissions" name="functions"
+                              invisible="access_level != 'custom'">
+                            <field name="function_permission_ids">
+                                <tree editable="bottom"
+                                      decoration-success="permission_type=='full'"
+                                      decoration-info="permission_type=='execute'"
+                                      decoration-warning="permission_type=='read_only'"
+                                      decoration-muted="permission_type=='no_access'">
+                                    <field name="function_id" readonly="1"/>
+                                    <field name="function_name" optional="hide"/>
+                                    <field name="function_type" widget="badge"/>
+                                    <field name="permission_type" widget="badge"/>
+                                    <field name="notes" optional="show"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="Notes" name="notes">
+                            <field name="notes" placeholder="Add notes about this permission..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- User Screen Permission Search -->
+    <record id="view_user_screen_permission_search" model="ir.ui.view">
+        <field name="name">user.screen.permission.search</field>
+        <field name="model">user.screen.permission</field>
+        <field name="arch" type="xml">
+            <search string="User Screen Permissions">
+                <field name="user_id"/>
+                <field name="screen_id"/>
+                <filter name="has_access" string="Has Access" domain="[('has_access','=',True)]"/>
+                <filter name="no_access" string="No Access" domain="[('has_access','=',False)]"/>
+                <separator/>
+                <filter name="full_access" string="Full Access" domain="[('access_level','=','full')]"/>
+                <filter name="read_only" string="Read Only" domain="[('access_level','=','read_only')]"/>
+                <filter name="custom" string="Custom" domain="[('access_level','=','custom')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_user" string="User" context="{'group_by':'user_id'}"/>
+                    <filter name="group_screen" string="Screen" context="{'group_by':'screen_id'}"/>
+                    <filter name="group_access_level" string="Access Level" context="{'group_by':'access_level'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ========================================== -->
+    <!-- User Permission Management Wizard -->
+    <!-- ========================================== -->
+
+    <!-- Quick Permission Assignment Wizard -->
+    <record id="view_user_permission_wizard_form" model="ir.ui.view">
+        <field name="name">user.permission.wizard.form</field>
+        <field name="model">user.permission.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Assign User Permissions">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>🔐 Quick Permission Assignment</h1>
+                    </div>
+
+                    <group>
+                        <group>
+                            <field name="user_id" options="{'no_create': True}"/>
+                        </group>
+                        <group>
+                            <field name="template_type" widget="radio"/>
+                        </group>
+                    </group>
+
+                    <group string="Select Screens to Grant Access">
+                        <field name="screen_ids" nolabel="1">
+                            <tree>
+                                <field name="name"/>
+                                <field name="code"/>
+                                <field name="model_name"/>
+                            </tree>
+                        </field>
+                    </group>
+                </sheet>
+                <footer>
+                    <button string="Assign Permissions" name="action_assign_permissions"
+                            type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- ========================================== -->
+    <!-- Menu Items -->
+    <!-- ========================================== -->
+
+    <!-- Add to Configuration Menu -->
+    <menuitem id="menu_user_permissions"
+              name="User Permissions"
+              parent="menu_project_costing_config"
+              sequence="30"/>
+
+    <menuitem id="menu_user_screen_permission"
+              name="Manage User Permissions"
+              parent="menu_user_permissions"
+              action="action_user_screen_permission"
+              sequence="10"/>
+
+    <menuitem id="menu_screen_definition"
+              name="Screen Definitions"
+              parent="menu_user_permissions"
+              action="action_screen_definition"
+              sequence="20"/>
+
+    <menuitem id="menu_user_permission_wizard"
+              name="Quick Permission Assignment"
+              parent="menu_user_permissions"
+              action="action_user_permission_wizard"
+              sequence="5"/>
+
+</odoo>

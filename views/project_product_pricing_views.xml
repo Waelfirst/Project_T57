@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Tree View -->
+    <record id="view_project_product_pricing_tree" model="ir.ui.view">
+        <field name="name">project.product.pricing.tree</field>
+        <field name="model">project.product.pricing</field>
+        <field name="arch" type="xml">
+            <tree string="Product Pricing">
+                <field name="name"/>
+                <field name="pricing_date"/>
+                <field name="version"/>
+                <field name="partner_id"/>
+                <field name="project_id"/>
+                <field name="product_id"/>
+                <field name="total_component_cost" sum="Total Cost"/>
+                <field name="state" widget="badge"
+                       decoration-success="state=='approved'"
+                       decoration-info="state=='confirmed'"
+                       decoration-muted="state=='cancelled'"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_project_product_pricing_form" model="ir.ui.view">
+        <field name="name">project.product.pricing.form</field>
+        <field name="model">project.product.pricing</field>
+        <field name="arch" type="xml">
+            <form string="Product Pricing">
+                <header>
+                    <button name="action_confirm" string="Confirm" type="object"
+                            class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_approve" string="Approve" type="object"
+                            class="oe_highlight" invisible="state != 'confirmed'"/>
+
+                    <!-- Three separate import buttons -->
+                    <button name="action_import_components" string="📦 Import Components"
+                            type="object" class="btn-primary"
+                            invisible="state not in ('draft', 'confirmed') or not product_id"
+                            help="Import component parts from Excel"/>
+                    <button name="action_import_bom_materials" string="🔩 Import BOM Materials"
+                            type="object" class="btn-info"
+                            invisible="state not in ('draft', 'confirmed') or not product_id"
+                            help="Import BOM raw materials from Excel"/>
+                    <button name="action_import_bom_operations" string="⚙️ Import BOM Operations"
+                            type="object" class="btn-warning"
+                            invisible="state not in ('draft', 'confirmed') or not product_id"
+                            help="Import BOM manufacturing operations from Excel"/>
+
+                    <button name="action_export_components_excel" string="Export Components Excel"
+                            type="object" class="btn-success"
+                            invisible="not component_line_ids"
+                            help="Export components with material breakdown and weight comparison"/>
+                    <button name="action_create_new_version" string="Create New Version"
+                            type="object" invisible="state != 'approved'"/>
+                    <button name="action_cancel" string="Cancel" type="object"
+                            invisible="state in ('approved','cancelled')"/>
+                    <button name="action_draft" string="Reset to Draft" type="object"
+                            invisible="state != 'cancelled'"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,confirmed,approved"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="pricing_date"/>
+                            <field name="version"/>
+                            <field name="partner_id"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                        <group>
+                            <field name="project_id"/>
+                            <field name="product_id"/>
+                            <field name="quantity" readonly="1" force_save="1"/>
+                            <field name="weight" readonly="1" force_save="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+<page string="Product Components">
+    <field name="component_line_ids">
+        <tree editable="bottom">
+            <field name="sequence" widget="handle"/>
+            <field name="component_id"/>
+            <field name="quantity"/>
+            <field name="uom_id"/>
+            <field name="weight"/>
+            <field name="cost_price"/>
+            <field name="total_cost" sum="Total Cost"/>
+            <field name="bom_id"/>
+
+            <!-- ← MODIFIED: Show specifications display text -->
+            <field name="specifications_display"
+                   string="Specifications"
+                   widget="text"
+                   optional="show"/>
+
+            <!-- Keep the button for editing -->
+            <button name="action_component_specifications" type="object"
+                    icon="fa-edit"
+                    title="Edit Specifications"
+                    string="Edit Specs"
+                    class="btn-primary"/>
+
+            <button name="action_view_bom" type="object"
+                    icon="fa-list"
+                    title="View/Create BOM"/>
+        </tree>
+    </field>
+    <group class="oe_subtotal_footer oe_right">
+        <field name="total_component_cost" widget="monetary"/>
+    </group>
+</page>
+                        <page string="Notes">
+                            <field name="notes" placeholder="Add any additional notes here..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_project_product_pricing_search" model="ir.ui.view">
+        <field name="name">project.product.pricing.search</field>
+        <field name="model">project.product.pricing</field>
+        <field name="arch" type="xml">
+            <search string="Search Pricing">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="project_id"/>
+                <field name="product_id"/>
+                <filter string="Draft" name="draft" domain="[('state','=','draft')]"/>
+                <filter string="Confirmed" name="confirmed" domain="[('state','=','confirmed')]"/>
+                <filter string="Approved" name="approved" domain="[('state','=','approved')]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Customer" name="group_customer" context="{'group_by':'partner_id'}"/>
+                    <filter string="Project" name="group_project" context="{'group_by':'project_id'}"/>
+                    <filter string="Product" name="group_product" context="{'group_by':'product_id'}"/>
+                    <filter string="Status" name="group_state" context="{'group_by':'state'}"/>
+                    <filter string="Version" name="group_version" context="{'group_by':'version'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_project_product_pricing" model="ir.actions.act_window">
+        <field name="name">Product Pricing</field>
+        <field name="res_model">project.product.pricing</field>
+        <field name="view_mode">tree,form</field>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first product pricing!
+            </p>
+            <p>
+                Define product components, costs, and link to BOMs.
+            </p>
+        </field>
+    </record>
+</odoo>

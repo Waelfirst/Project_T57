@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Main Menu -->
+    <menuitem id="menu_project_product_costing_root"
+              name="Steel Structural Project"
+              sequence="10"
+              web_icon="project_product_costing,static/description/icon.png"/>
+
+    <!-- Project Definition Menu -->
+    <menuitem id="menu_project_definition"
+              name="Project Definitions"
+              parent="menu_project_product_costing_root"
+              action="action_project_definition"
+              sequence="10"/>
+
+    <!-- Product Pricing Menu -->
+    <menuitem id="menu_project_product_pricing"
+              name="Product Pricing"
+              parent="menu_project_product_costing_root"
+              action="action_project_product_pricing"
+              sequence="20"/>
+
+    <!-- Material Planning Menu -->
+    <menuitem id="menu_material_production_planning"
+              name="Material &amp; Production Planning"
+              parent="menu_project_product_costing_root"
+              action="action_material_production_planning"
+              sequence="30"/>
+
+    <!-- Work Order Execution Menu -->
+    <menuitem id="menu_work_order_execution"
+              name="Work Order Execution"
+              parent="menu_project_product_costing_root"
+              action="action_work_order_execution"
+              sequence="40"/>
+
+    <!-- Reports Menu -->
+    <menuitem id="menu_project_costing_reports"
+              name="Reports"
+              parent="menu_project_product_costing_root"
+              sequence="90"/>
+    
+    <menuitem id="menu_production_progress_report"
+              name="Production Progress Report"
+              parent="menu_project_costing_reports"
+              action="action_production_progress_report"
+              sequence="10"/>
+    
+    <menuitem id="menu_material_usage_report"
+              name="Material Usage Report"
+              parent="menu_project_costing_reports"
+              action="action_material_usage_report"
+              sequence="20"/>
+
+    <!-- Configuration Menu -->
+    <menuitem id="menu_project_costing_config"
+              name="Configuration"
+              parent="menu_project_product_costing_root"
+              sequence="100"/>
+    
+    <menuitem id="menu_specification_definitions"
+              name="Specification Definitions"
+              parent="menu_project_costing_config"
+              action="action_specification_definition"
+              sequence="10"/>
+</odoo>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Work Order Creation Wizard Form -->
+    <record id="view_work_order_creation_wizard_form" model="ir.ui.view">
+        <field name="name">work.order.creation.wizard.form</field>
+        <field name="model">work.order.creation.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Create Work Orders">
+                <sheet>
+                    <div class="alert alert-info" role="alert">
+                        <strong>Create Production Orders</strong>
+                        <p>Specify how many units to produce. Component orders will be created proportionally.</p>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="planning_id" readonly="1"/>
+                            <field name="product_id" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="max_quantity" readonly="1"/>
+                            <field name="quantity_to_produce" 
+                                   decoration-danger="quantity_to_produce > max_quantity"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="create_component_orders"/>
+                    </group>
+                    
+                    <group invisible="not create_component_orders or not component_preview">
+                        <field name="component_preview" widget="text" nolabel="1"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button string="Create Orders" name="action_create_orders" 
+                            type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

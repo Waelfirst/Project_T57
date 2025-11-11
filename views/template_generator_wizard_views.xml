@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Template Generator Wizard Form -->
+    <record id="view_template_generator_wizard_form" model="ir.ui.view">
+        <field name="name">template.generator.wizard.form</field>
+        <field name="model">template.generator.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Generate Excel Templates">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>📊 Excel Template Generator</h1>
+                    </div>
+
+                    <group>
+                        <field name="template_type" widget="radio"/>
+                    </group>
+
+                    <group string="📋 Template Information">
+                        <div class="alert alert-info" role="alert" invisible="template_type != 'components'">
+                            <strong>Components Template</strong>
+                            <p>Use this template to import component parts with quantities, weights, and costs.</p>
+                        </div>
+                        <div class="alert alert-info" role="alert" invisible="template_type != 'bom_materials'">
+                            <strong>BOM Materials Template</strong>
+                            <p>Use this template to import raw materials for Bill of Materials.</p>
+                        </div>
+                        <div class="alert alert-info" role="alert" invisible="template_type != 'bom_operations'">
+                            <strong>BOM Operations Template</strong>
+                            <p>Use this template to import manufacturing operations and routing.</p>
+                        </div>
+                        <div class="alert alert-success" role="alert" invisible="template_type != 'complete'">
+                            <strong>✅ Complete Template (Recommended)</strong>
+                            <p>Contains all three sheets: Components, BOM Materials, and BOM Operations.</p>
+                            <p>Use this for importing complete product data with BOMs.</p>
+                        </div>
+                    </group>
+                </sheet>
+                <footer>
+                    <button string="📥 Download Template" name="action_generate_template"
+                            type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Template Generator Action -->
+    <record id="action_template_generator_wizard" model="ir.actions.act_window">
+        <field name="name">Generate Excel Templates</field>
+        <field name="res_model">template.generator.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- Add to Configuration Menu -->
+    <menuitem id="menu_template_generator"
+              name="Download Excel Templates"
+              parent="menu_project_costing_config"
+              action="action_template_generator_wizard"
+              sequence="20"/>
+
+</odoo>

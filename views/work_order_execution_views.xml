@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Tree View -->
+    <record id="view_work_order_execution_tree" model="ir.ui.view">
+        <field name="name">work.order.execution.tree</field>
+        <field name="model">work.order.execution</field>
+        <field name="arch" type="xml">
+            <tree string="Work Order Execution">
+                <field name="name"/>
+                <field name="project_id"/>
+                <field name="product_id"/>
+                <field name="total_components"/>
+                <field name="in_progress_components"/>
+                <field name="completed_components"/>
+                <field name="state" widget="badge" 
+                       decoration-success="state=='done'"
+                       decoration-info="state in ('loaded','in_progress')"
+                       decoration-muted="state=='cancelled'"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View with Smart Buttons -->
+    <record id="view_work_order_execution_form" model="ir.ui.view">
+        <field name="name">work.order.execution.form</field>
+        <field name="model">work.order.execution</field>
+        <field name="arch" type="xml">
+            <form string="Work Order Execution">
+                <header>
+                    <button name="action_load_work_orders" string="Load Work Orders" type="object" 
+                            class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_open_process_wizard" string="Process All Selected" type="object"
+                            class="oe_highlight btn-primary" 
+                            invisible="state not in ('loaded','in_progress')"
+                            help="Review and process materials + operations for selected work orders"/>
+                    <button name="action_start_selected" string="Start Selected" type="object" 
+                            class="oe_highlight" invisible="state not in ('loaded','in_progress')"/>
+                    <button name="action_open_operations_view" string="View Operations" 
+                            type="object" class="btn-info" invisible="state == 'draft'"/>
+                    <button name="action_export_operations_excel" string="Export Operations Excel" 
+                            type="object" class="btn-success" invisible="state == 'draft'"/>
+                    <button name="action_export_material_planning_excel" string="Export Material Planning Excel"
+                            type="object" class="btn-warning" invisible="state == 'draft'"
+                            help="Export detailed material planning"/>
+                    <button name="action_open_production_report" string="View Progress Report"
+                            type="object" class="btn-secondary" invisible="state == 'draft'"/>
+                    <button name="action_done" string="Mark as Done" type="object"
+                            invisible="state != 'in_progress'"/>
+                    <button name="action_cancel" string="Cancel" type="object"
+                            invisible="state in ('done','cancelled')"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,loaded,in_progress,done"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_material_issues"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-cubes"
+                                invisible="material_issue_count == 0"
+                                help="View material consumption for selected work orders">
+                            <field name="material_issue_count" widget="statbutton"
+                                   string="Material Issues"/>
+                        </button>
+                        <button name="action_view_operations_actual"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-tasks"
+                                invisible="operation_actual_count == 0"
+                                help="View actual operations for selected work orders">
+                            <field name="operation_actual_count" widget="statbutton"
+                                   string="Operations Actual"/>
+                        </button>
+                        <button name="action_issue_materials_for_selected"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-arrow-circle-right"
+                                invisible="state not in ('loaded','in_progress')"
+                                help="Manually issue available materials"
+                                confirm="This will automatically issue all available materials for selected work orders. Continue?">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Issue</span>
+                                <span class="o_stat_text">Materials</span>
+                            </div>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="project_id"/>
+                            <field name="product_id"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                        <group>
+                            <field name="total_components"/>
+                            <field name="in_progress_components"/>
+                            <field name="completed_components"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Work Order Lines" invisible="state == 'draft'">
+                            <group>
+                                <div class="alert alert-info" role="alert" invisible="state != 'loaded'">
+                                    <strong>💡 Quick Actions:</strong>
+                                    <ul class="mb-0">
+                                        <li>✅ Select work orders below to track</li>
+                                        <li>🚀 Click "Start Selected" to auto-issue materials</li>
+                                        <li>📦 Use "Issue Materials" button anytime</li>
+                                        <li>📊 View materials in "Material Issues" smart button</li>
+                                    </ul>
+                                </div>
+                            </group>
+                            <field name="work_order_line_ids">
+                                <tree editable="bottom" decoration-success="production_state=='done'"
+                                      decoration-info="production_state in ('confirmed','progress')">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="selected" widget="boolean_toggle"/>
+                                    <field name="component_id"/>
+                                    <field name="quantity"/>
+                                    <field name="weight"/>
+                                    <field name="production_id" readonly="1"/>
+                                    <field name="production_state" readonly="1"/>
+                                    <field name="current_operation" readonly="1"/>
+                                    <field name="progress_percentage" widget="progressbar" readonly="1"/>
+                                    <button name="action_start_production" type="object"
+                                            icon="fa-play" string="Start"
+                                            invisible="production_state not in ('draft','confirmed')"/>
+                                    <button name="action_next_operation" type="object"
+                                            icon="fa-forward" string="Next Operation"
+                                            invisible="production_state != 'progress'"/>
+                                    <button name="action_view_production" type="object"
+                                            icon="fa-external-link" string="View"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="Notes">
+                            <field name="notes" placeholder="Add notes here..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_work_order_execution_search" model="ir.ui.view">
+        <field name="name">work.order.execution.search</field>
+        <field name="model">work.order.execution</field>
+        <field name="arch" type="xml">
+            <search string="Search Work Order Execution">
+                <field name="name"/>
+                <field name="project_id"/>
+                <field name="product_id"/>
+                <filter string="Draft" name="draft" domain="[('state','=','draft')]"/>
+                <filter string="Loaded" name="loaded" domain="[('state','=','loaded')]"/>
+                <filter string="In Progress" name="in_progress" domain="[('state','=','in_progress')]"/>
+                <filter string="Done" name="done" domain="[('state','=','done')]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Project" name="group_project" context="{'group_by':'project_id'}"/>
+                    <filter string="Product" name="group_product" context="{'group_by':'product_id'}"/>
+                    <filter string="Status" name="group_state" context="{'group_by':'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_work_order_execution" model="ir.actions.act_window">
+        <field name="name">Work Order Execution</field>
+        <field name="res_model">work.order.execution</field>
+        <field name="view_mode">tree,form</field>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create work order execution!
+            </p>
+            <p>
+                Load and execute work orders for project components.
+            </p>
+        </field>
+    </record>
+
+    <!-- Work Order Operation Line Views -->
+    <!-- Work Order Operation Line Tree View - ENHANCED -->
+<record id="view_work_order_operation_line_tree" model="ir.ui.view">
+    <field name="name">work.order.operation.line.tree</field>
+    <field name="model">work.order.operation.line</field>
+    <field name="arch" type="xml">
+        <tree string="Work Order Operations"
+              decoration-success="state=='done'"
+              decoration-info="state=='progress'"
+              decoration-warning="state in ('ready','waiting')"
+              decoration-muted="state=='cancel'"
+              create="false" delete="false">
+            <header>
+                <button name="action_start_selected"
+                        type="object"
+                        string="Start Selected"
+                        class="btn-success"
+                        icon="fa-play"
+                        help="Start all selected operations"/>
+                <button name="action_finish_selected"
+                        type="object"
+                        string="Finish Selected"
+                        class="btn-warning"
+                        icon="fa-check"
+                        help="Finish all selected operations"/>
+                <button name="action_process_selected_operations"
+                        type="object"
+                        string="Process All Selected"
+                        class="btn-primary"
+                        icon="fa-cogs"
+                        help="Process all selected operations at once (materials + operations)"/>
+            </header>
+            <field name="sequence" widget="handle"/>
+            <field name="selected" widget="boolean_toggle"/>
+            <field name="production_id"/>
+            <field name="component_id"/>
+            <field name="name"/>
+            <field name="workcenter_id"/>
+            <field name="state" widget="badge"/>
+            <field name="qty_production"/>
+            <field name="qty_produced"/>
+            <field name="progress_percentage" widget="progressbar"/>
+            <field name="duration_expected"/>
+            <field name="duration_real"/>
+            <field name="date_start"/>
+            <button name="action_start" type="object"
+                    icon="fa-play" string="Start"
+                    invisible="state not in ('pending','ready','waiting')"/>
+            <button name="action_finish" type="object"
+                    icon="fa-check" string="Finish"
+                    invisible="state not in ('progress','to_close')"/>
+            <button name="action_open_workorder" type="object"
+                    icon="fa-external-link" string="Open"/>
+        </tree>
+    </field>
+</record>
+    <record id="view_work_order_operation_line_search" model="ir.ui.view">
+        <field name="name">work.order.operation.line.search</field>
+        <field name="model">work.order.operation.line</field>
+        <field name="arch" type="xml">
+            <search string="Search Operations">
+                <field name="production_id"/>
+                <field name="component_id"/>
+                <field name="name"/>
+                <field name="workcenter_id"/>
+                <filter name="filter_not_completed" string="Not Completed"
+                        domain="[('is_completed', '=', False)]"/>
+                <filter name="filter_in_progress" string="In Progress"
+                        domain="[('state', '=', 'progress')]"/>
+                <filter name="filter_ready" string="Ready"
+                        domain="[('state', 'in', ('ready', 'waiting'))]"/>
+                <filter name="filter_completed" string="Completed"
+                        domain="[('state', '=', 'done')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_production" string="Production Order"
+                            context="{'group_by': 'production_id'}"/>
+                    <filter name="group_component" string="Component"
+                            context="{'group_by': 'component_id'}"/>
+                    <filter name="group_workcenter" string="Work Center"
+                            context="{'group_by': 'workcenter_id'}"/>
+                    <filter name="group_state" string="State"
+                            context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_work_order_operation_line" model="ir.actions.act_window">
+        <field name="name">Work Order Operations</field>
+        <field name="res_model">work.order.operation.line</field>
+        <field name="view_mode">tree,form</field>
+        <field name="context">{'search_default_filter_not_completed': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No Operations Found
+            </p>
+            <p>
+                Operations will appear here once work orders are loaded.
+            </p>
+            <p>
+                <b>Quick Actions:</b>
+            </p>
+            <ul>
+                <li>✅ Select operations using the checkbox</li>
+                <li>🚀 Click "Process All Selected" to batch process</li>
+                <li>⚙️ Edit time and quantities before processing</li>
+            </ul>
+        </field>
+    </record>
+
+    <!-- Server Action for Batch Processing -->
+    <record id="action_process_selected_operations_server" model="ir.actions.server">
+        <field name="name">Process Selected Operations</field>
+        <field name="model_id" ref="model_work_order_operation_line"/>
+        <field name="binding_model_id" ref="model_work_order_operation_line"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">
+if records:
+    action = records.action_process_selected_operations()
+        </field>
+    </record>
+
+</odoo>

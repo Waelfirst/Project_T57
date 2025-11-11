@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- إضافة هذا السطر قبل </data> -->
+<record id="seq_project_cost_estimation" model="ir.sequence">
+    <field name="name">Project Cost Estimation Sequence</field>
+    <field name="code">project.cost.estimation</field>
+    <field name="prefix">EST/</field>
+    <field name="padding">5</field>
+    <field name="company_id" eval="False"/>
+</record>
+        <!-- Project Definition Sequence -->
+        <record id="seq_project_definition" model="ir.sequence">
+            <field name="name">Project Definition Sequence</field>
+            <field name="code">project.definition</field>
+            <field name="prefix">PROJ/</field>
+            <field name="padding">5</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <!-- Product Pricing Sequence -->
+        <record id="seq_project_product_pricing" model="ir.sequence">
+            <field name="name">Product Pricing Sequence</field>
+            <field name="code">project.product.pricing</field>
+            <field name="prefix">PRICE/</field>
+            <field name="padding">5</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <!-- Material Planning Sequence -->
+        <record id="seq_material_production_planning" model="ir.sequence">
+            <field name="name">Material Production Planning Sequence</field>
+            <field name="code">material.production.planning</field>
+            <field name="prefix">PLAN/</field>
+            <field name="padding">5</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <!-- Work Order Execution Sequence -->
+        <record id="seq_work_order_execution" model="ir.sequence">
+            <field name="name">Work Order Execution Sequence</field>
+            <field name="code">work.order.execution</field>
+            <field name="prefix">WOE/</field>
+            <field name="padding">5</field>
+            <field name="company_id" eval="False"/>
+        </record>
+    </data>
+</odoo>

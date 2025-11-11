@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Tree View -->
+    <record id="view_material_production_planning_tree" model="ir.ui.view">
+        <field name="name">material.production.planning.tree</field>
+        <field name="model">material.production.planning</field>
+        <field name="arch" type="xml">
+            <tree string="Material &amp; Production Planning">
+                <field name="name"/>
+                <field name="project_id"/>
+                <field name="product_id"/>
+                <field name="quantity"/>
+                <field name="state" widget="badge" 
+                       decoration-success="state=='done'"
+                       decoration-info="state in ('components_loaded','material_planned','work_orders_created')"
+                       decoration-muted="state=='cancelled'"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_material_production_planning_form" model="ir.ui.view">
+        <field name="name">material.production.planning.form</field>
+        <field name="model">material.production.planning</field>
+        <field name="arch" type="xml">
+            <form string="Material &amp; Production Planning">
+                <header>
+                    <button name="action_load_components" string="Load Components" type="object" 
+                            class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_material_planning" string="Material Planning" type="object" 
+                            class="oe_highlight" invisible="state not in ('components_loaded','material_planned')"/>
+                    <button name="action_create_work_orders" string="Create Work Orders" type="object" 
+                            class="oe_highlight" invisible="state not in ('material_planned','work_orders_created')"/>
+                    <button name="action_done" string="Mark as Done" type="object" 
+                            invisible="state != 'work_orders_created'"/>
+                    <button name="action_cancel" string="Cancel" type="object" 
+                            invisible="state in ('done','cancelled')"/>
+                    <field name="state" widget="statusbar" 
+                           statusbar_visible="draft,components_loaded,material_planned,work_orders_created,done"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_production_orders" type="object" 
+                                class="oe_stat_button" icon="fa-cogs"
+                                invisible="production_count == 0">
+                            <field name="production_count" widget="statbutton" 
+                                   string="Production Orders"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="project_id"/>
+                            <field name="product_id"/>
+                            <field name="pricing_id"/>
+                        </group>
+                        <group>
+                            <field name="quantity" readonly="1" force_save="1"/>
+                            <field name="weight" readonly="1" force_save="1"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    <group invisible="state not in ('work_orders_created','done')">
+                        <group string="Production Tracking">
+                            <field name="total_produced_qty"/>
+                            <field name="remaining_qty"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Components" invisible="state == 'draft'">
+                            <group>
+                                <button name="action_sync_specifications_from_pricing"
+                                        string="🔄 Sync Specifications from Pricing"
+                                        type="object"
+                                        class="btn-info"
+                                        invisible="not pricing_id"
+                                        help="Update specifications from the latest pricing data"/>
+                            </group>
+                            <field name="component_line_ids">
+                                <tree>
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="component_id"/>
+                                    <field name="quantity"/>
+                                    <field name="uom_id"/>
+                                    <field name="weight"/>
+                                    <field name="cost_price"/>
+                                    <field name="bom_id"/>
+                                    <field name="specifications_display"
+                                           string="Specifications"
+                                           widget="text"
+                                           optional="show"/>
+                                    <field name="spec_count" optional="hide"/>
+                                    <button name="action_component_specifications" type="object"
+                                            icon="fa-file-text-o"
+                                            title="View Specifications"
+                                            class="oe_highlight"
+                                            decoration-success="spec_count > 0"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="Material Requirements" invisible="state not in ('material_planned','work_orders_created','done')">
+                            <field name="material_requirement_ids">
+                                <tree decoration-danger="shortage_qty > 0">
+                                    <field name="component_id"/>
+                                    <field name="material_id"/>
+                                    <field name="required_qty"/>
+                                    <field name="uom_id"/>
+                                    <field name="available_qty"/>
+                                    <field name="shortage_qty"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="Work Orders" invisible="state not in ('work_orders_created','done')">
+                            <field name="production_order_ids">
+                                <tree decoration-info="state in ('draft','confirmed')"
+                                      decoration-success="state == 'done'"
+                                      decoration-warning="state in ('progress','to_close')">
+                                    <field name="name"/>
+                                    <field name="product_id"/>
+                                    <field name="product_qty"/>
+                                    <field name="product_uom_id"/>
+                                    <field name="date_start"/>
+                                    <field name="date_finished"/>
+                                    <field name="state" widget="badge"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="RFQs / Purchase Orders">
+                            <group>
+                                <div class="alert alert-info" role="alert" invisible="rfq_ids">
+                                    <strong>ℹ️ No Purchase Orders Yet</strong>
+                                    <p class="mb-0">RFQs and Purchase Orders will appear here after you create them from Material Planning.</p>
+                                </div>
+                            </group>
+                            <field name="rfq_ids" widget="many2many">
+                                <tree decoration-info="state in ['draft','sent']"
+                                      decoration-success="state=='purchase'"
+                                      decoration-warning="state=='to approve'"
+                                      decoration-muted="state=='cancel'">
+                                    <field name="name"/>
+                                    <field name="partner_id"/>
+                                    <field name="date_order"/>
+                                    <field name="amount_total" sum="Total Amount"/>
+                                    <field name="currency_id" invisible="1"/>
+                                    <field name="state" widget="badge"/>
+                                    <button name="button_confirm" string="Confirm Order"
+                                            type="object" class="btn-primary"
+                                            invisible="state not in ['draft','sent','to approve']"
+                                            icon="fa-check"/>
+                                    <button name="action_rfq_send" string="Send by Email"
+                                            type="object" class="btn-secondary"
+                                            invisible="state not in ['draft','sent']"
+                                            icon="fa-envelope"/>
+                                </tree>
+                                <form>
+                                    <header>
+                                        <button name="button_confirm" string="Confirm Order" type="object"
+                                                invisible="state not in ['draft','sent','to approve']"
+                                                class="btn-primary"/>
+                                        <button name="action_rfq_send" string="Send by Email" type="object"
+                                                invisible="state not in ['draft','sent']"/>
+                                        <button name="button_cancel" string="Cancel" type="object"
+                                                invisible="state in ['purchase','done','cancel']"/>
+                                        <field name="state" widget="statusbar" statusbar_visible="draft,sent,purchase,done"/>
+                                    </header>
+                                    <sheet>
+                                        <div class="oe_title">
+                                            <h1><field name="name"/></h1>
+                                        </div>
+                                        <group>
+                                            <group>
+                                                <field name="partner_id"/>
+                                                <field name="partner_ref"/>
+                                                <field name="currency_id" invisible="1"/>
+                                            </group>
+                                            <group>
+                                                <field name="date_order"/>
+                                                <field name="origin"/>
+                                                <field name="company_id" groups="base.group_multi_company"/>
+                                            </group>
+                                        </group>
+                                        <notebook>
+                                            <page string="Products">
+                                                <field name="order_line">
+                                                    <tree editable="bottom">
+                                                        <field name="product_id"/>
+                                                        <field name="name"/>
+                                                        <field name="date_planned" optional="show"/>
+                                                        <field name="product_qty"/>
+                                                        <field name="qty_received" readonly="1" optional="show"/>
+                                                        <field name="product_uom"/>
+                                                        <field name="price_unit"/>
+                                                        <field name="taxes_id" widget="many2many_tags" optional="hide"/>
+                                                        <field name="price_subtotal" widget="monetary"/>
+                                                    </tree>
+                                                </field>
+                                                <group class="oe_subtotal_footer">
+                                                    <field name="amount_untaxed" widget="monetary"/>
+                                                    <field name="amount_tax" widget="monetary"/>
+                                                    <field name="amount_total" class="oe_subtotal_footer_separator" widget="monetary"/>
+                                                </group>
+                                            </page>
+                                            <page string="Other Info">
+                                                <group>
+                                                    <group string="Delivery">
+                                                        <field name="dest_address_id"/>
+                                                        <field name="picking_type_id"/>
+                                                    </group>
+                                                    <group string="Billing">
+                                                        <field name="invoice_status"/>
+                                                        <field name="payment_term_id"/>
+                                                        <field name="fiscal_position_id"/>
+                                                    </group>
+                                                </group>
+                                            </page>
+                                        </notebook>
+                                    </sheet>
+                                    <div class="oe_chatter">
+                                        <field name="message_follower_ids"/>
+                                        <field name="activity_ids"/>
+                                        <field name="message_ids"/>
+                                    </div>
+                                </form>
+                            </field>
+                        </page>
+                        <page string="Notes">
+                            <field name="notes" placeholder="Add any additional notes here..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_material_production_planning_search" model="ir.ui.view">
+        <field name="name">material.production.planning.search</field>
+        <field name="model">material.production.planning</field>
+        <field name="arch" type="xml">
+            <search string="Search Planning">
+                <field name="name"/>
+                <field name="project_id"/>
+                <field name="product_id"/>
+                <filter string="Draft" name="draft" domain="[('state','=','draft')]"/>
+                <filter string="Components Loaded" name="components_loaded" domain="[('state','=','components_loaded')]"/>
+                <filter string="Material Planned" name="material_planned" domain="[('state','=','material_planned')]"/>
+                <filter string="Work Orders Created" name="work_orders_created" domain="[('state','=','work_orders_created')]"/>
+                <filter string="Done" name="done" domain="[('state','=','done')]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Project" name="group_project" context="{'group_by':'project_id'}"/>
+                    <filter string="Product" name="group_product" context="{'group_by':'product_id'}"/>
+                    <filter string="Status" name="group_state" context="{'group_by':'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Material Requirement Wizard Form -->
+    <record id="view_material_requirement_wizard_form" model="ir.ui.view">
+        <field name="name">material.requirement.wizard.form</field>
+        <field name="model">material.requirement.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Material Requirements">
+                <sheet>
+                    <group>
+                        <field name="planning_id" invisible="1"/>
+                    </group>
+                    <group string="Material Requirements">
+                        <field name="material_line_ids" nolabel="1">
+                            <tree decoration-danger="shortage_qty > 0" create="false" edit="false" delete="false">
+                                <field name="component_id"/>
+                                <field name="material_id"/>
+                                <field name="required_qty"/>
+                                <field name="uom_id"/>
+                                <field name="available_qty"/>
+                                <field name="shortage_qty"/>
+                            </tree>
+                        </field>
+                    </group>
+                </sheet>
+                <footer>
+                    <button string="Create RFQ" name="action_create_rfq" type="object" class="btn-primary"/>
+                    <button string="Close" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_material_production_planning" model="ir.actions.act_window">
+        <field name="name">Material &amp; Production Planning</field>
+        <field name="res_model">material.production.planning</field>
+        <field name="view_mode">tree,form</field>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first material planning!
+            </p>
+            <p>
+                Plan materials and create work orders for your projects.
+            </p>
+        </field>
+    </record>
+</odoo>
