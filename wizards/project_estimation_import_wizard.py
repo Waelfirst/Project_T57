@@ -218,48 +218,85 @@ class ProjectEstimationImportWizard(models.TransientModel):
         }
 
     def _find_product_line(self, product_code, product_name):
-        """Find product line by product name only (simplified)"""
-        if not product_name:
-            _logger.warning('    → No product name provided')
-            return False
-
-        _logger.info('    → Searching by product name only:')
+        """Find product line by product code or name with multiple strategies - ENHANCED"""
+        
+        _logger.info('    → Searching for product...')
+        _logger.info('       Code from Excel: "%s"', product_code)
         _logger.info('       Name from Excel: "%s"', product_name)
-
+        
         # Show what's available in the project
         _logger.info('    → Products in project:')
         for pl in self.project_id.product_line_ids:
-            _logger.info('       - Name: "%s"', pl.product_id.name)
-
-        # Strategy 1: Exact match by name
-        product_line = self.project_id.product_line_ids.filtered(
-            lambda l: l.product_id.name and l.product_id.name.strip() == product_name.strip()
-        )
-        if product_line:
-            _logger.info('    → ✅ MATCHED by exact name: %s', product_line[0].product_id.name)
-            return product_line[0] if len(product_line) > 1 else product_line
-
-        # Strategy 2: Case-insensitive match by name
-        product_line = self.project_id.product_line_ids.filtered(
-            lambda l: l.product_id.name and l.product_id.name.strip().lower() == product_name.strip().lower()
-        )
-        if product_line:
-            _logger.info('    → ✅ MATCHED by case-insensitive name: %s', product_line[0].product_id.name)
-            return product_line[0] if len(product_line) > 1 else product_line
-
-        # Strategy 3: Partial match (name contains Excel name OR Excel name contains product name)
-        product_name_lower = product_name.strip().lower()
-        product_line = self.project_id.product_line_ids.filtered(
-            lambda l: l.product_id.name and (
-                product_name_lower in l.product_id.name.strip().lower() or
-                l.product_id.name.strip().lower() in product_name_lower
+            _logger.info('       - Code: "%s" | Name: "%s"', 
+                        pl.product_id.default_code or '(no code)', 
+                        pl.product_id.name)
+        
+        # Strategy 1: Match by product code (exact)
+        if product_code:
+            product_line = self.project_id.product_line_ids.filtered(
+                lambda l: l.product_id.default_code and 
+                         l.product_id.default_code.strip() == product_code.strip()
             )
-        )
-        if product_line:
-            _logger.info('    → ✅ MATCHED by partial name: %s', product_line[0].product_id.name)
-            return product_line[0] if len(product_line) > 1 else product_line
-
-        _logger.warning('    → ❌ NO MATCH FOUND for name: "%s"', product_name)
+            if product_line:
+                _logger.info('    → ✅ MATCHED by exact code: %s', product_line[0].product_id.name)
+                return product_line[0] if len(product_line) > 1 else product_line
+        
+        # Strategy 2: Match by product name (exact)
+        if product_name:
+            product_line = self.project_id.product_line_ids.filtered(
+                lambda l: l.product_id.name and 
+                         l.product_id.name.strip() == product_name.strip()
+            )
+            if product_line:
+                _logger.info('    → ✅ MATCHED by exact name: %s', product_line[0].product_id.name)
+                return product_line[0] if len(product_line) > 1 else product_line
+        
+        # Strategy 3: Case-insensitive match by code
+        if product_code:
+            product_line = self.project_id.product_line_ids.filtered(
+                lambda l: l.product_id.default_code and 
+                         l.product_id.default_code.strip().lower() == product_code.strip().lower()
+            )
+            if product_line:
+                _logger.info('    → ✅ MATCHED by case-insensitive code: %s', product_line[0].product_id.name)
+                return product_line[0] if len(product_line) > 1 else product_line
+        
+        # Strategy 4: Case-insensitive match by name
+        if product_name:
+            product_line = self.project_id.product_line_ids.filtered(
+                lambda l: l.product_id.name and 
+                         l.product_id.name.strip().lower() == product_name.strip().lower()
+            )
+            if product_line:
+                _logger.info('    → ✅ MATCHED by case-insensitive name: %s', product_line[0].product_id.name)
+                return product_line[0] if len(product_line) > 1 else product_line
+        
+        # Strategy 5: Partial match by name (contains)
+        if product_name:
+            product_name_lower = product_name.strip().lower()
+            product_line = self.project_id.product_line_ids.filtered(
+                lambda l: l.product_id.name and (
+                    product_name_lower in l.product_id.name.strip().lower() or
+                    l.product_id.name.strip().lower() in product_name_lower
+                )
+            )
+            if product_line:
+                _logger.info('    → ✅ MATCHED by partial name: %s', product_line[0].product_id.name)
+                return product_line[0] if len(product_line) > 1 else product_line
+        
+        # Strategy 6: Try to find by display_name
+        if product_name:
+            product_line = self.project_id.product_line_ids.filtered(
+                lambda l: l.product_id.display_name and 
+                         product_name.strip().lower() in l.product_id.display_name.strip().lower()
+            )
+            if product_line:
+                _logger.info('    → ✅ MATCHED by display_name: %s', product_line[0].product_id.name)
+                return product_line[0] if len(product_line) > 1 else product_line
+        
+        _logger.warning('    → ❌ NO MATCH FOUND')
+        _logger.warning('       Tried Code: "%s"', product_code)
+        _logger.warning('       Tried Name: "%s"', product_name)
         return False
 
     def _execute_import(self, ws, data_start_row):
